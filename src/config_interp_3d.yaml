@@ -40,20 +40,20 @@
 
 # =============== Input for interpolation =========================
 # File path -------------------------------------------------
-input_path: "/g/data/rt52/era5/pressure-levels/reanalysis" # path to the ERA5 reanalysis data (or GCM needs to be interpolated)
-input_path_sst: "/g/data/rt52/era5/single-levels/reanalysis" # path to the observed SST data, files should be in the following path: input_path_sst/year/files_here
-input_z_path: "/g/data/rt52/era5/pressure-levels/reanalysis/z" # path to the observed geopotential data, files should be in the following path: input_z_path/year/files_here
+input_path: "/data/users/ic_pac/data/ERA5_for_bc/plevs" # path to the ERA5 reanalysis data (or GCM needs to be interpolated)
+input_path_sst: "/data/users/ic_pac/data/ERA5_for_bc/plevs/sst" # path to the observed SST data, files should be in the following path: input_path_sst/year/files_here
+input_z_path: "/data/users/ic_pac/data/ERA5_for_bc/plevs/geopotential" # path to the observed geopotential data, files should be in the following path: input_z_path/year/files_here
 
 # target_path: "/g/data/oi10/replicas/CMIP6/CMIP/CNRM-CERFACS/CNRM-CM6-1/historical/r1i1p1f2" #  # "/g/data/fs38/publications/CMIP6/ScenarioMIP/CSIRO/ACCESS-ESM1-5/ssp370/r6i1p1f1"
-target_path: "/g/data/fs38/publications/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/historical/r6i1p1f1"
+target_path: "/data/users/ic_pac/data/GCM/raw_boundary_data/EC-Earth3-Veg"
 
 # target_path_sst: "/g/data/oi10/replicas/CMIP6/CMIP/CNRM-CERFACS/CNRM-CM6-1/historical/r1i1p1f2" # "/g/data/fs38/publications/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/historical/r1i1p1f1"
-target_path_sst: "/g/data/fs38/publications/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/historical/r6i1p1f1"
+target_path_sst: "/data/users/ic_pac/data/GCM/raw_boundary_data/EC-Earth3-Veg"
 target_g_path: None
 # target_orog_path: "/g/data/oi10/replicas/CMIP6/CMIP/CNRM-CERFACS/CNRM-CM6-1/historical/r1i1p1f2" # path to the fx file of the target GCM, e.g., orography, land-sea mask, etc.
-target_orog_path: "/g/data/fs38/publications/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/historical/r6i1p1f1" # path to the fx file of the target GCM, e.g., orography, land-sea mask, etc.
+target_orog_path: "/data/users/ic_pac/data/GCM/raw_boundary_data/EC-Earth3-Veg/" # path to the fx file of the target GCM, e.g., orography, land-sea mask, etc.
 
-output_path: "/g/data/w28/yk8692/input/era5/access_esm" # /g/data/w28/yk8692/era5/sdmbc_v2 # "/g/data/w28/yk8692/input/era5/validation"
+output_path: "/data/users/ic_pac/data/ERA5_for_bc/ERA5_interpolated" # /g/data/w28/yk8692/era5/sdmbc_v2 # "/g/data/w28/yk8692/input/era5/validation"
 
 # Model
 input_model: "reanalysis"
@@ -68,10 +68,10 @@ target_model: "gcm"
 # version: "v20180917"
 
 infor: "6hrLev"
-gname: "ACCESS-ESM1-5"
+gname: "EC-Earth3-Veg"
 period: "historical"
-cinfor: "r6i1p1f1"
-sinfor: "gn"
+cinfor: "r1i1p1f1"
+sinfor: "gr"
 version: "v20200529"
 
 # infor: "6hrLev"
@@ -91,15 +91,17 @@ version: "v20200529"
 
 # Selected area ---------------------------------------------------
 # latitudes and longitudes of the selected area
-lat_min: 10 # -55
-lat_max: 15 # -5
-lon_min: 110 # 80
-lon_max: 115 # 170
+lat_min: -35 # Minimum latitude
+lat_max: 10 # Maximum latitude
+lon_min: 134 # Minimum longitude
+lon_max: 232 # Maximum longitude
+#lon_min: 134 # Minimum longitude
+#lon_max: -128 # Maximum longitude
 # lat_min: -90 # -55
 # lat_max: 90 # -5
 # lon_min: 0 # 80
 # lon_max: 360 # 170
 # Simulation periods ----------------------------------------------
-startyear_h: 1959
-endyear_h: 2014
+startyear_h: 1990
+endyear_h: 1991
 # =============== Input for interpolation ended =========================

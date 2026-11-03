@@ -230,9 +230,12 @@ def calculate_pressure_levels(ap, b, ps):
         ps
     )  # This automatically broadcasts 'ap' across 'ps' dimensions
     b_expanded = b * xr.ones_like(ps)  # Similarly for 'b'
-
+    print(ap_expanded.shape)
+    print(b_expanded.shape)
+    print(f"ps: {ps.shape}")
     # Calculate pressure at each model level
     p_levels = ap_expanded + b_expanded * ps
+    p_levels = p_levels.transpose("time", "lev", "lat", "lon")
     return p_levels
 
 
@@ -350,6 +353,13 @@ def compute_geopotential_height(p_levels, T_levels, orog, q_levels=None):
     Rd = 287.05  # J/kg/K, specific gas constant for dry air
     g0 = 9.80665  # m/s^2, acceleration due to gravity
 
+    for coord in ("lat", "lon"):
+        np.testing.assert_allclose(
+            orog[coord].values, p_levels[coord].values, rtol=0, atol=1e-10,
+            err_msg=f"Orography and pressure {coord} grids do not match",
+        )
+    orog = orog.assign_coords(lat=p_levels.lat, lon=p_levels.lon)
+
     # Ensure input variables are xarray DataArrays
     T_levels = (
         T_levels if isinstance(T_levels, xr.DataArray) else xr.DataArray(T_levels)
@@ -426,6 +436,7 @@ def compute_geopotential_height(p_levels, T_levels, orog, q_levels=None):
     # Concatenate
     Z_g = xr.concat([Z_s_expanded, Z_g_mid], dim="lev")
     Z_g = Z_g.transpose("time", "lev", "lat", "lon")
+
 
     # Ensure the 'lev' coordinate matches p_levels
     Z_g = xr.DataArray(
@@ -697,7 +708,8 @@ def standardize_coords_from(ds):
     Standardizes the coordinate names in the given dataset.
 
     This function renames the coordinates in the dataset to a standard naming convention.
-    Specifically, it renames 'longitude' to 'lon' and 'latitude' to 'lat' if they exist in the dataset.
+    Specifically, it renames 'longitude' to 'lon', 'latitude' to 'lat', and
+    'valid_time' to 'time' if they exist in the dataset.
 
     Parameters:
     ds (xarray.Dataset): The input dataset with coordinates to be standardized.
@@ -705,7 +717,12 @@ def standardize_coords_from(ds):
     Returns:
     xarray.Dataset: A new dataset with standardized coordinate names.
     """
-    coord_map = {"longitude": "lon", "latitude": "lat"}
+    coord_map = {
+        "longitude": "lon",
+        "latitude": "lat",
+        "valid_time": "time",
+        "pressure_level": "level"
+    }
     new_ds = ds.copy()
     for old_name, new_name in coord_map.items():
         if old_name in new_ds.coords:
@@ -942,7 +959,8 @@ def load_datasets_with_history(year, month, files, chunks, config, var, target_p
             time=(future_ds["time"].dt.year == year)
             & (future_ds["time"].dt.month == month)
         )
-
+    future_ds = future_ds.transpose("time", "lev", "lat", "lon", ..., missing_dims="ignore")
+    
     first_time = pd.to_datetime(future_ds.time.values[0])
     # if starts at midnight -> no action
     if first_time.hour == 0:
@@ -1276,6 +1294,7 @@ def compute_or_load_geopotential(config, target_grids, tq_grids, year, month, va
             )
 
         orog = xr.open_dataset(orog_path[0], chunks={"lat": -1, "lon": -1})["orog"]
+
         target_zfull = (
             compute_geopotential_height(target_p, target_t.ta, orog)
             .chunk({"time": 10, "lev": -1, "lat": -1, "lon": -1})
@@ -1346,6 +1365,7 @@ def load_input_data(input_files):
     #     chunks = {dim: "auto" for dim in temp_ds.dims}
     chunks = {dim: "auto" for dim in xr.open_dataset(input_files[0]).dims}
     ds = xr.open_mfdataset(input_files, combine="by_coords", chunks=chunks)
+
     return standardize_coords(ds)
 
 
@@ -1392,7 +1412,10 @@ def regrid_and_interpolate(
         else "conservative" if input_var == "q" else "bilinear"
     )
     print(method)
+    print(f"input_model: {config['input_model']}, input_var: {input_var}, target_var: {target_var}, year: {year}, month: {month}")
     if config["input_model"] == "reanalysis":
+        print("in reanalysis branch")
+        print(f"{config['input_path']}/{input_var}/{year}/{input_var}_*_{year}{month:02d}*.nc")
         input_files_pattern = glob.glob(
             f"{config['input_path']}/{input_var}/{year}/{input_var}_*_{year}{month:02d}*.nc"
         )
@@ -1402,6 +1425,8 @@ def regrid_and_interpolate(
         weights_path_va_target_var = f"{config['output_path']}/weights_{target_var}_{config['input_model']}_to_{config['gname']}_target_var.nc"
         # weights_path_wind = f"{config['output_path']}/weights_{target_var}_{config['input_model']}_to_{config['gname']}_wind_{method}.nc"
     else:
+        print("in GCM branch")
+        print(f"{config['input_path']}/{config['input_infor']}/{target_var}/{config['input_sinfor']}/{config['input_version']}/{target_var}_*{year}*.nc")
         input_files_pattern = glob.glob(
             f"{config['input_path']}/{config['input_infor']}/{target_var}/{config['input_sinfor']}/{config['input_version']}/{target_var}_*{year}*.nc"
         )
@@ -1417,6 +1442,7 @@ def regrid_and_interpolate(
     # print("target_ds in line 1359", target_ds)
     rename_dict = {input_var: target_var}
 
+    print(input_files_pattern)
     do = standardize_coords_from(load_input_data(input_files_pattern))
     do_corrected = correct_latitudes(do).sel(
         time=do["time"].dt.hour.isin([0, 6, 12, 18])
@@ -1676,6 +1702,10 @@ def save_interpolated_data(interpolated_era5_da, output_file):
     """
     with ProgressBar():
         print(f"Writing to {output_file}")
+        print(interpolated_era5_da.coords)
+        print(interpolated_era5_da.attrs)
+        print("lon shape:", interpolated_era5_da.lon.shape)
+        print("lon encoding:", interpolated_era5_da.lon.encoding)
         interpolated_era5_da.to_netcdf(output_file, compute=False).compute()
 
 
@@ -1765,6 +1795,8 @@ def main(config_path, var_interp, override_ncpus=None, override_mem=None):
                     var_obs = map_obs_name(var_interp)
                 else:
                     var_obs = var_interp
+                print(f"var_interp: {var_interp}")
+                print(f"var_obs: {var_obs}")
 
                 process_input_variable(
                     config,

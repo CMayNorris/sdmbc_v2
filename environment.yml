@@ -1,0 +1,52 @@
+name: sdmbcv2
+
+channels:
+  - conda-forge
+
+dependencies:
+  # Python
+  - python>=3.11
+
+  # Core scientific stack
+  - numpy>=1.26
+  - scipy>=1.11
+  - pandas>=2.1
+  - xarray>=2023.12
+  - netcdf4>=1.6
+  - cftime>=1.6
+  - bottleneck>=1.3
+  - numba>=0.58
+
+  # Parallel / distributed computation
+  - dask>=2024.1
+  - distributed>=2024.1
+  - toolz>=0.12
+  - tqdm>=4.66
+
+  # Configuration and utilities
+  - pyyaml>=6.0
+  - typing_extensions>=4.8
+
+  # Climate and geospatial
+  - esmf
+  - xesmf>=0.7
+  - xclim>=0.46
+  - rioxarray>=0.15
+  - geopandas>=0.14
+  - shapely>=2.0
+  - cartopy>=0.22
+
+  # File / system IO
+  - cdo
+  - python-cdo>=1.6
+  - fsspec>=2023.9
+  - zarr>=2.16
+
+  # Plotting
+  - matplotlib>=3.8
+  - seaborn>=0.12
+
+  # Packaging
+  - setuptools>=68
+  - wheel>=0.41
+  - pip
