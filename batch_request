@@ -1,0 +1,12 @@
+#!/bin/bash
+
+#SBATCH -n 1
+#SBATCH --partition=cpu-long
+#SBATCH -t 0-12:00:00
+#SBATCH --mem=200G
+
+source /opt/conda/etc/profile.d/conda.sh
+conda activate /data/users/charlotte.norris/conda_envs/sdmbc_env
+ulimit -l unlimited
+srun python ./src/interp_obs2gcm.py --yp src/config_interp_3d.yaml --var hus --ncpus 1 --mem 200
+conda deactivate
