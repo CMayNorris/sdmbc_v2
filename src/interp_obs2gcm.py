@@ -1735,6 +1735,21 @@ def main(config_path, var_interp, override_ncpus=None, override_mem=None):
     with open(config_path, "r") as f:
         config = yaml.safe_load(f)
 
+    config["lat_min"], config["lat_max"] = sorted(
+        (config["lat_min"], config["lat_max"])
+    )
+    lon_span = config["lon_max"] - config["lon_min"]
+    config["lon_min"] %= 360
+    config["lon_max"] %= 360
+    if abs(lon_span) >= 360:
+        config["lon_min"], config["lon_max"] = 0, 360
+    else:
+        config["lon_min"], config["lon_max"] = sorted(
+            (config["lon_min"], config["lon_max"])
+        )
+
+    print(f"lon_min: {config['lon_min']}, lon_max: {config['lon_max']}, lat_min: {config['lat_min']}, lat_max: {config['lat_max']}")
+
     # Extract resources from config
     ncpus = config.get("resources", {}).get("ncpus", 4)
     mem_gb = config.get("resources", {}).get("mem_gb", 16)

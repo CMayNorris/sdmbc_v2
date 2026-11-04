@@ -92,11 +92,11 @@ version: "v20200529"
 # Selected area ---------------------------------------------------
 # latitudes and longitudes of the selected area
 lat_min: -35 # Minimum latitude
-lat_max: 10 # Maximum latitude
-lon_min: 134 # Minimum longitude
-lon_max: 232 # Maximum longitude
+lat_max: 20 # Maximum latitude
 #lon_min: 134 # Minimum longitude
-#lon_max: -128 # Maximum longitude
+#lon_max: 232 # Maximum longitude
+lon_min: 142 # Minimum longitude
+lon_max: 230 # Maximum longitude
 # lat_min: -90 # -55
 # lat_max: 90 # -5
 # lon_min: 0 # 80
