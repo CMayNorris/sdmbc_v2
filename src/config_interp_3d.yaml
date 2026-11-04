@@ -41,7 +41,8 @@
 # =============== Input for interpolation =========================
 # File path -------------------------------------------------
 input_path: "/data/users/ic_pac/data/ERA5_for_bc/plevs" # path to the ERA5 reanalysis data (or GCM needs to be interpolated)
-input_path_sst: "/data/users/ic_pac/data/ERA5_for_bc/plevs/sst" # path to the observed SST data, files should be in the following path: input_path_sst/year/files_here
+input_path_sst: "/data/users/ic_pac/data/ERA5_for_bc/plevs" # path to the observed SST data, files should be in the following path: input_path_sst/year/files_here
+sst_var_name: "var34" # name of the variable sst, in MO files it is var34
 input_z_path: "/data/users/ic_pac/data/ERA5_for_bc/plevs/geopotential" # path to the observed geopotential data, files should be in the following path: input_z_path/year/files_here
 
 # target_path: "/g/data/oi10/replicas/CMIP6/CMIP/CNRM-CERFACS/CNRM-CM6-1/historical/r1i1p1f2" #  # "/g/data/fs38/publications/CMIP6/ScenarioMIP/CSIRO/ACCESS-ESM1-5/ssp370/r6i1p1f1"
