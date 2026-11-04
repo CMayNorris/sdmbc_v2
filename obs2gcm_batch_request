@@ -2,11 +2,16 @@
 
 #SBATCH -n 1
 #SBATCH --partition=cpu-long
-#SBATCH -t 0-12:00:00
+#SBATCH -t 1-00:00:00
 #SBATCH --mem=200G
+#SBATCH --array=0-3
+
+vars=(hus ta ua va)
+var=${vars[$SLURM_ARRAY_TASK_ID]}
+echo "Processing variable: ${var}"
 
 source /opt/conda/etc/profile.d/conda.sh
-conda activate /data/users/charlotte.norris/conda_envs/sdmbc_env
+conda activate $DATADIR/conda_envs/sdmbcv2
 ulimit -l unlimited
-srun python ./src/interp_obs2gcm.py --yp src/config_interp_3d.yaml --var hus --ncpus 1 --mem 200
+srun python ./src/interp_obs2gcm.py --yp src/config_interp_3d.yaml --var ${var} --ncpus 1 --mem 200
 conda deactivate
