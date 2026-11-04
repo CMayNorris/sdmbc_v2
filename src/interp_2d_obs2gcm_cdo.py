@@ -179,6 +179,7 @@ def main(config):
 
     if input_model == "reanalysis":
         input_2d = "sst"
+        sst_var_name = config.get("sst_var_name", "sst")
     else:
         input_2d = target_2d
 
@@ -234,17 +235,19 @@ def main(config):
                 for input_var, target_var in zip([input_2d], [target_2d]):
                     method = "bilinear"
                     input_files_pattern = glob.glob(
-                        f"{input_path}/{input_var}/{year}/{input_var}_*_{year}{month:02d}*.nc"
+                        f"{input_path}/{input_var}/{year}/*{input_var}_*{year}*.nc"
                     )
 
                     weights_path = f"{output_path}/weights_{input_model if input_model == 'reanalysis' else input_gname}_to_{gname}_{target_var}_{method}.nc"
                     output_file = f"{output_path}/{target_var}_{input_model}_to_{gname}_{year}-{month:02}.nc"
 
+                    print(input_files_pattern[0])
                     with xr.open_dataset(input_files_pattern[0]) as temp_ds:
                         chunks = {dim: "auto" for dim in temp_ds.dims}
                     do = xr.open_mfdataset(
                         input_files_pattern, combine="by_coords", chunks=chunks
                     )
+
                     do = standardize_coords_from(do)
                     do_corrected = do.sel(
                         time=(do["time"].dt.year == year)
@@ -252,7 +255,7 @@ def main(config):
                     )
                     do_corrected = do_corrected.resample(time="D").mean()
 
-                    rename_dict = {input_var: target_var}
+                    rename_dict = {sst_var_name: target_var}
                     do_regridded = regrid(
                         do_corrected, ds, method, weights_path, rename_dict
                     )
@@ -306,8 +309,6 @@ def main(config):
             cdo.remapbil(target_latlon_grid[0], input=file, output=output_file)
             print(f"Remapped: {file} -> {output_file}")
 
-
-print("Interpolation complete.")
 
 if __name__ == "__main__":
     args = parse_arguments()
