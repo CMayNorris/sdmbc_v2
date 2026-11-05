@@ -395,7 +395,7 @@ def main(config_path, override_ncpus=None, override_mem=None):
             # Construct the path to the preprocessed file for this variable
             obs_file = os.path.join(
                 temp_dir,
-                f"preprocessed_obs_{var_name}_lev_{level}_{tiles[0]['lat_min']}_{tiles[0]['lat_max']}_{tiles[0]['lon_min']}_{tiles[0]['lon_max']}_{startyear_h}_{endyear_h}.nc",
+                f"preprocessed_obs_{var_name}_lev_{level}_{domain[0]['lat_min']}_{domain[0]['lat_max']}_{domain[0]['lon_min']}_{domain[0]['lon_max']}_{startyear_h}_{endyear_h}.nc",
             )
             sliced_obs[var_name] = xr.open_dataset(obs_file)[
                 var_name
@@ -428,10 +428,10 @@ def main(config_path, override_ncpus=None, override_mem=None):
                 # lon_range = (tile["lon_min"], tile["lon_max"])
                 lat_i0, lat_i1 = tile["lat_min_idx"], tile["lat_max_idx"]
                 lon_j0, lon_j1 = tile["lon_min_idx"], tile["lon_max_idx"]
-                # print('lat_i0, lat_i1, lon_j0, lon_j1', lat_i0, lat_i1, lon_j0, lon_j1)
+                print('lat_i0, lat_i1, lon_j0, lon_j1', lat_i0, lat_i1, lon_j0, lon_j1)
                 lat_range = (tile["lat_min"], tile["lat_max"])
                 lon_range = (tile["lon_min"], tile["lon_max"])
-                # print(f"Tile {idx}: lat {lat_range}, lon {lon_range}")
+                print(f"Tile {idx}: lat {lat_range}, lon {lon_range}")
                 # try:
                 # Define output file paths
                 output_file = f"{temp_dir}/bc_corrected_tile_3d_{period}_lev_{level}_{idx}_{tile['lat_min']}_{tile['lat_max']}_{tile['lon_min']}_{tile['lon_max']}.nc"
