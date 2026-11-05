@@ -437,6 +437,16 @@ def main(config_path, override_ncpus=None, override_mem=None):
                 output_file = f"{temp_dir}/bc_corrected_tile_3d_{period}_lev_{level}_{idx}_{tile['lat_min']}_{tile['lat_max']}_{tile['lon_min']}_{tile['lon_max']}.nc"
                 output_params = f"{temp_dir}/bc_params_tile_3d_{period}_lev_{level}_{idx}_{tile['lat_min']}_{tile['lat_max']}_{tile['lon_min']}_{tile['lon_max']}.nc"
 
+                # the code is slow, so we check if the output files already exist before processing
+                if os.path.exists(output_file) and os.path.exists(output_params):
+                    print(
+                        f"Both output files already exist for tile {idx}, level {level}; "
+                        "skipping bias correction.",
+                        flush=True,
+                    )
+                    all_bc_params.append(output_params)
+                    continue
+
                 obs_tile = sliced_obs.isel(
                     lat=slice(lat_i0, lat_i1), lon=slice(lon_j0, lon_j1)
                 )
