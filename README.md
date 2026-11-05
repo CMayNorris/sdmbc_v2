@@ -92,7 +92,7 @@ Compile the Fortran subroutines into a Python module (requires gfortran). Run th
 
 ```bash
 python -m numpy.f2py -m mrmbc -h mbc_subroutines.pyf mbc_subroutines.f90 --overwrite-signature
-python -m numpy.f2py -c mbc_subroutines.pyf mbc_subroutines.f90 --fcompiler=gnu95 --f90flags="-O3 -frecursive"
+FC=gfortran python -m numpy.f2py -c mbc_subroutines.pyf mbc_subroutines.f90 --f90flags="-O3 -frecursive"
 ```
 
 This produces a mrmbc module that can be imported from Python.

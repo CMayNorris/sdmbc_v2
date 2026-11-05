@@ -46,6 +46,10 @@ dependencies:
   - matplotlib>=3.8
   - seaborn>=0.12
 
+  # Fortran extension build
+  - meson
+  - ninja
+
   # Packaging
   - setuptools>=68
   - wheel>=0.41
