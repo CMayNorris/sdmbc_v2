@@ -1013,7 +1013,7 @@ def preprocess_and_save_gcm(
                 data_var = data_var[var_name]
             sliced_gcm[var_name] = data_var
 
-        sliced_gcm_sel = sliced_gcm.astype(np.float32).persist()
+        sliced_gcm_sel = sliced_gcm.astype(np.float32)
         lock = Lock(name=temp_file)  # one-writer-per-path
         with lock:
             # Double-check if the file was created while waiting for the lock
@@ -1183,24 +1183,34 @@ def load_preprocess_variable(
         xarray.DataArray: Preprocessed dataset for the variable.
     """
 
-    ds_sel = xr.open_mfdataset(
-        file_paths,
-        combine="by_coords",
-        chunks={"time": 1000, "lat": "auto", "lon": "auto"},
-        preprocess=lambda ds: preprocess_dataset(
-            config,
-            ds,
-            var_name,
-            level_index,
-            lat_range,
-            lon_range,
-            startyear_h,
-            endyear_h,
-            config.bc_boundary,
-        ),
-    )
+    loaded_arrays = []
+    for file_path in file_paths:
+        print(f"[GCM] Loading {var_name} without Dask: {file_path}", flush=True)
+        with xr.open_dataset(file_path, chunks=None) as source:
+            data = preprocess_dataset(
+                config,
+                source,
+                var_name,
+                level_index,
+                lat_range,
+                lon_range,
+                startyear_h,
+                endyear_h,
+                config.bc_boundary,
+            ).astype(np.float32)
+            print(
+                f"[GCM] Selected {var_name} sizes={dict(data.sizes)}; loading into memory",
+                flush=True,
+            )
+            data.load()
+        loaded_arrays.append(data)
+        print(f"[GCM] Loaded {var_name} from {file_path}", flush=True)
 
-    return ds_sel
+    if not loaded_arrays:
+        raise ValueError(f"No input files found for variable {var_name}")
+    if len(loaded_arrays) == 1:
+        return loaded_arrays[0]
+    return xr.concat(loaded_arrays, dim="time").sortby("time")
 
 
 def correction_wrapper_pool(args):
@@ -1357,8 +1367,17 @@ def bc_correction_grid_cell_hist_dask(
     flattened_results = [item for sublist in results for item in sublist]
 
     # Initialize arrays to hold the final data
+    # it was hard coded to use 31 years, 12 months and 31 days. 
     corrected_data = {
-        var: np.empty((31, 12, 31, len(reshaped_gcm.lat), len(reshaped_gcm.lon)))
+        var: np.empty(
+            (
+                len(reshaped_gcm.year),
+                len(reshaped_gcm.month),
+                len(reshaped_gcm.day),
+                len(reshaped_gcm.lat),
+                len(reshaped_gcm.lon),
+            )
+        )
         for var in var_list_w
     }
     bc_params_array = np.empty(
