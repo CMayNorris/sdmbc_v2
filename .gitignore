@@ -50,5 +50,6 @@ Desktop.ini
 *.swo
 
 slurm-*.out
+slurm-out/
 *.o[0-9]*
 *.e[0-9]*

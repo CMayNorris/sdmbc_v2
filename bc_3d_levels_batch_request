@@ -1,0 +1,57 @@
+#!/bin/bash
+
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --partition=cpu-long
+#SBATCH -t 1-00:00:00
+#SBATCH --mem=100G
+
+set -euo pipefail
+: "${DATADIR:?DATADIR is not set in the Slurm environment}"
+conda_base="$(conda info --base)"
+source "${conda_base}/etc/profile.d/conda.sh"
+conda activate "/home/users/grace.redmond/.conda/envs/sdmbcv2"
+ulimit -l unlimited
+
+project_dir="${PROJECT_DIR:?Submit this worker through bc_3d_levels_batch_submit.sh}"
+base_config="${project_dir}/config_3d.yaml"
+array_task_id="${SLURM_ARRAY_TASK_ID:?Submit this worker through bc_3d_levels_batch_submit.sh}"
+
+if ((LEVEL_START < 0 || LEVEL_END < LEVEL_START || LEVELS_PER_TASK < 1)); then
+	echo "Invalid level bounds or levels-per-task settings from submitter."
+	conda deactivate
+	exit 1
+fi
+
+slevel=$((LEVEL_START + LEVELS_PER_TASK * array_task_id))
+if ((slevel > LEVEL_END)); then
+	echo "Array task ${array_task_id} is beyond configured LEVEL_END ${LEVEL_END}; exiting."
+	conda deactivate
+	exit 0
+fi
+
+elevel=$((slevel + LEVELS_PER_TASK - 1))
+if ((elevel > LEVEL_END)); then
+	elevel=$LEVEL_END
+fi
+
+config_temp_dir="$(mktemp -d "${TMPDIR:-/tmp}/sdmbcv2_config_3d_lev_${slevel}_${elevel}_XXXXXX")"
+config_file="${config_temp_dir}/config_3d_lev_${slevel}_${elevel}.yml"
+
+python - "$base_config" "$config_file" "$slevel" "$elevel" <<'PY'
+import sys
+import yaml
+
+with open(sys.argv[1], "r") as source:
+	config = yaml.safe_load(source)
+
+config["slevel"] = int(sys.argv[3])
+config["elevel"] = int(sys.argv[4])
+
+with open(sys.argv[2], "w") as destination:
+	yaml.safe_dump(config, destination, sort_keys=False)
+PY
+
+echo "Processing levels ${slevel}-${elevel} with config ${config_file}"
+srun python "${project_dir}/src/sdmbc_main_3d.py" --yp "$config_file" --ncpus 4 --mem 100
+conda deactivate

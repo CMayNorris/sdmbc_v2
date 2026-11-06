@@ -197,6 +197,14 @@ def main(config_path, override_ncpus=None, override_mem=None):
     with open(config_path, "r") as f:
         config_dict = yaml.safe_load(f)
         config = SimpleNamespace(**config_dict)
+    tile_lev_only = bool(getattr(config, "tile_lev_only", False))
+    run_future = config.bc_future and not tile_lev_only
+    if tile_lev_only:
+        print(
+            "tile_lev_only is enabled: processing requested historical levels only; "
+            "future correction will be skipped.",
+            flush=True,
+        )
 
     # Extract resources from config
     ncpus = getattr(config, "resources", {}).get("ncpus", 4)
@@ -240,7 +248,7 @@ def main(config_path, override_ncpus=None, override_mem=None):
     lower_limit = config.lower_limit
 
     # Validate inputs
-    if config.bc_future:
+    if run_future:
         bc_future_path = config.bc_future_path
         period_f = config.period_f
         startyear_f = config.startyear_f
@@ -298,7 +306,7 @@ def main(config_path, override_ncpus=None, override_mem=None):
         for var in variables
     }
     # obs_path_f = "/g/data/w28/yk8692/input/era5/validation"
-    if config.bc_future:
+    if run_future:
         file_paths_by_variable_obs_f = {
             var: (
                 generate_file_paths_obs(
@@ -700,7 +708,7 @@ def main(config_path, override_ncpus=None, override_mem=None):
 
             del full_bc_corrected, ds_full_params
 
-        if config.bc_future:
+        if run_future:
 
             for idx, tile in enumerate(tqdm(tiles, desc="Processing tiles")):
                 # try:
